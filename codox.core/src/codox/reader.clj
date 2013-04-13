@@ -24,10 +24,18 @@
   (let [{:keys [skip-wiki no-doc]} (meta var)]
     (or skip-wiki no-doc)))
 
+(defn- patch-protocol-members-file-ref [m]
+  (if (:protocol m)
+    (let [pm (-> m :protocol meta)
+          fr (select-keys pm [:file :line])]
+      (merge m fr))
+    m))
+
 (defn- read-publics [namespace]
   (for [var (sorted-public-vars namespace)
         :when (not (skip-public? var))]
     (-> (meta var)
+        (patch-protocol-members-file-ref)
         (select-keys
          [:name :file :line :arglists :doc :macro :added :deprecated])
         (update-in [:doc] correct-indent))))
